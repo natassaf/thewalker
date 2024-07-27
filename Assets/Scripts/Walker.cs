@@ -26,8 +26,10 @@ public class Walker : MonoBehaviour
     
     private float leftFootLastForwardMovement = 0f;
     private float rightFootLastForwardMovement = 0f;
+    private float leftLegDirection=0f;
+    private float rightLegDirection=0f;
 
-
+    
     void Start()
     {
         leftFootTargetOffset = leftFootTarget.localPosition;
@@ -37,56 +39,86 @@ public class Walker : MonoBehaviour
         rightHandTargetOffset = rightHandTarget.localPosition;
     }
 
-    void SetTargetPosition(Transform target, Vector3 offset, float movementChangeHor, float movementChangeVer){
-        Vector3 positionZ = this.transform.InverseTransformVector(leftFootTarget.forward) * movementChangeHor;
-        Vector3 positionY = this.transform.InverseTransformVector(leftFootTarget.up) * movementChangeVer;
-        target.localPosition = offset + positionZ + positionY;
+    void SetTargetPosition(Transform target, Vector3 offset, float forward, float upwards, float right){
+        Vector3 moveForward = this.transform.InverseTransformVector(target.forward) * forward;
+        Vector3 moveUp = this.transform.InverseTransformVector(target.up) * upwards;
+        Vector3 moveRight = this.transform.InverseTransformVector(target.right) * right;
+
+        target.localPosition = offset + moveForward + moveUp + moveRight;
     }
 
     private void OnCollisionEnter(Collision collided){
         Debug.Log("Collided with " + collided);
+        Quaternion targetRotation = transform.localRotation * Quaternion.Euler(0, -90, 0);
+        transform.localRotation = targetRotation;
+        // leftFootTarget.localRotation = targetRotation;
+        // rightFootTarget.localRotation = targetRotation;
+
+        // leftFootTargetOffset = leftFootTarget.localPosition;
+        // rightFootTargetOffset = rightFootTarget.localPosition;
+
+        leftHandTargetOffset = leftHandTarget.localPosition;
+        rightHandTargetOffset = rightHandTarget.localPosition;
     }
+
+    float moveLeftFootTarget(float adjustedTime){
+        float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
+        float right = 0.0f;
+        SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward, right);
+        float forwardDirection = forward - leftFootLastForwardMovement;
+        leftFootLastForwardMovement = forward;
+        return forwardDirection;
+    }
+
+    float moveRightFootTarget(float adjustedTime){
+        float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
+        float right = 0.0f;
+        SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward, right);
+        float forwardDirection = forward - rightFootLastForwardMovement;
+        rightFootLastForwardMovement = forward;
+        return forwardDirection;
+
+    }
+
+    void moveLeftHandTarget(float adjustedTime){
+        float forward = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.3f;
+        float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
+        float right = 0.0f;
+        SetTargetPosition(leftHandTarget,  leftHandTargetOffset, forward, upward, right);
+    }
+
+    void moveRightHandTarget(float adjustedTime){
+        float forward = armHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+        float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
+        float right = 0.0f;
+        SetTargetPosition(rightHandTarget,  rightHandTargetOffset, forward, upward, right);
+    }
+
     void Update()
     {   
+        
         float adjustedTime = Time.time * frequency;
 
-        // LEFT FOOT MOVEMENT
-        float movementChangeLeftFootHor = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float movementChangeLeftFootVer = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
-        SetTargetPosition(leftFootTarget,  leftFootTargetOffset, movementChangeLeftFootHor, movementChangeLeftFootVer);
-        
-        // RIGHT FOOT MOVEMENT
-        float movementChangeRightFootHor = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float movementChangeRightFootVer = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
-        SetTargetPosition(rightFootTarget,  rightFootTargetOffset, movementChangeRightFootHor, movementChangeRightFootVer);
+        leftLegDirection = moveLeftFootTarget(adjustedTime);
+        rightLegDirection = moveRightFootTarget(adjustedTime);
+        moveLeftHandTarget(adjustedTime);
+        moveRightHandTarget(adjustedTime);
 
-        // RIGHT HAND MOVEMENT
-        float movementChangeRightHandHor = armHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float movementChangeRightHandVer = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
-        SetTargetPosition(rightHandTarget,  rightHandTargetOffset, movementChangeRightHandHor, movementChangeRightHandVer);
-
-        // LEFT HAND MOVEMENT
-        float movementChangeLeftHandHor = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.3f;
-        float movementChangeLeftHandVer = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
-        SetTargetPosition(leftHandTarget,  leftHandTargetOffset, movementChangeLeftHandHor, movementChangeLeftHandVer);
-
-        float LeftLegDirection = movementChangeLeftFootHor - leftFootLastForwardMovement;
-        float RightLegDirection = movementChangeRightFootHor - rightFootLastForwardMovement;
 
         // Only when character's feet move backwards we set the foot to stick to the ground
         RaycastHit hit;
-        if (LeftLegDirection < 0 && Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, Mathf.Infinity )){
+        if ( Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, Mathf.Infinity )){
             leftFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Abs(LeftLegDirection);
+            this.transform.position += this.transform.forward * Math.Max(leftLegDirection, 0f);
         }
 
-        if (RightLegDirection<0 && Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit, Mathf.Infinity)){
+        if (  Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit, Mathf.Infinity)){
             rightFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Abs(RightLegDirection);
-
+            this.transform.position += this.transform.forward * Math.Max(rightLegDirection, 0f);
         }
-        leftFootLastForwardMovement = movementChangeLeftFootHor;
-        rightFootLastForwardMovement = movementChangeRightFootHor;
+
 
     }
 
