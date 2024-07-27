@@ -17,7 +17,7 @@ public class Walker : MonoBehaviour
     public AnimationCurve armHorizontalCurve;
 
     public AnimationCurve armVerticalCurve;
-    public float frequency = 1f; 
+    public float frequency = 1.5f; 
 
     private Vector3 leftFootTargetOffset;
     private Vector3 rightFootTargetOffset;
@@ -43,6 +43,9 @@ public class Walker : MonoBehaviour
         target.localPosition = offset + positionZ + positionY;
     }
 
+    private void OnCollisionEnter(Collision collided){
+        Debug.Log("Collided with " + collided);
+    }
     void Update()
     {   
         float adjustedTime = Time.time * frequency;
