@@ -68,14 +68,12 @@ public class Walker : MonoBehaviour
         SetTargetPosition(leftHandTarget,  leftHandTargetOffset, movementChangeLeftHandHor, movementChangeLeftHandVer);
 
         float LeftLegDirection = movementChangeLeftFootHor - leftFootLastForwardMovement;
-        float RightLegDirection = movementChangeRightFootVer - rightFootLastForwardMovement;
+        float RightLegDirection = movementChangeRightFootHor - rightFootLastForwardMovement;
 
         // Only when character's feet move backwards we set the foot to stick to the ground
         RaycastHit hit;
         if (LeftLegDirection < 0 && Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, Mathf.Infinity )){
             leftFootTarget.position = hit.point;
-            Debug.Log("this.transform.forward: " + this.transform.forward);
-            Debug.Log("LeftLegDirection: " + LeftLegDirection );
             this.transform.position += this.transform.forward * Math.Abs(LeftLegDirection);
         }
 
@@ -85,7 +83,7 @@ public class Walker : MonoBehaviour
 
         }
         leftFootLastForwardMovement = movementChangeLeftFootHor;
-        rightFootLastForwardMovement = movementChangeRightFootVer;
+        rightFootLastForwardMovement = movementChangeRightFootHor;
 
     }
 
