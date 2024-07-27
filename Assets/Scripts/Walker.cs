@@ -12,70 +12,80 @@ public class Walker : MonoBehaviour
     public Transform leftHandTarget;
     public Transform rightHandTarget;
 
-    public AnimationCurve horizontalCurve;
-    public AnimationCurve verticalCurve;
+    public AnimationCurve legHorizontalCurve;
+    public AnimationCurve legVerticalCurve;
+    public AnimationCurve armHorizontalCurve;
 
-    private Vector3 leftTargetOffset;
-    private Vector3 rightTargetOffset;
+    public AnimationCurve armVerticalCurve;
+    public float frequency = 1f; 
+
+    private Vector3 leftFootTargetOffset;
+    private Vector3 rightFootTargetOffset;
     private Vector3 leftHandTargetOffset;
     private Vector3 rightHandTargetOffset;
-    public float frequency = 1.2f; 
-
+    
     private float leftFootLastForwardMovement = 0f;
     private float rightFootLastForwardMovement = 0f;
 
 
     void Start()
     {
-        leftTargetOffset = leftFootTarget.localPosition;
-        rightTargetOffset = rightFootTarget.localPosition;
+        leftFootTargetOffset = leftFootTarget.localPosition;
+        rightFootTargetOffset = rightFootTarget.localPosition;
 
         leftHandTargetOffset = leftHandTarget.localPosition;
         rightHandTargetOffset = rightHandTarget.localPosition;
     }
 
+    void SetTargetPosition(Transform target, Vector3 offset, float movementChangeHor, float movementChangeVer){
+        Vector3 positionZ = this.transform.InverseTransformVector(leftFootTarget.forward) * movementChangeHor;
+        Vector3 positionY = this.transform.InverseTransformVector(leftFootTarget.up) * movementChangeVer;
+        target.localPosition = offset + positionZ + positionY;
+    }
+
     void Update()
     {   
         float adjustedTime = Time.time * frequency;
-        
+
         // LEFT FOOT MOVEMENT
-        float movementChangeLeftFoot = horizontalCurve.Evaluate(adjustedTime);
-        Vector3 movement_z_left_foot = this.transform.InverseTransformVector(leftFootTarget.forward) * movementChangeLeftFoot;
-        Vector3 movement_y_left_foot = this.transform.InverseTransformVector(leftFootTarget.up) * verticalCurve.Evaluate(adjustedTime+0.5f);
+        float movementChangeLeftFootHor = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+        float movementChangeLeftFootVer = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
+        SetTargetPosition(leftFootTarget,  leftFootTargetOffset, movementChangeLeftFootHor, movementChangeLeftFootVer);
         
         // RIGHT FOOT MOVEMENT
-        float movementChangeRightFoot = horizontalCurve.Evaluate(adjustedTime-1);
-        Vector3 movement_z_right_foot = this.transform.InverseTransformVector(rightFootTarget.forward) * movementChangeRightFoot; 
-        Vector3 movement_y_right_foot = this.transform.InverseTransformVector(rightFootTarget.up) * verticalCurve.Evaluate(adjustedTime-0.5f);
+        float movementChangeRightFootHor = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
+        float movementChangeRightFootVer = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
+        SetTargetPosition(rightFootTarget,  rightFootTargetOffset, movementChangeRightFootHor, movementChangeRightFootVer);
 
         // RIGHT HAND MOVEMENT
-        Vector3 movement_z_right_hand = this.transform.InverseTransformDirection(rightHandTarget.forward) * horizontalCurve.Evaluate(adjustedTime);
-        
+        float movementChangeRightHandHor = armHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+        float movementChangeRightHandVer = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
+        SetTargetPosition(rightHandTarget,  rightHandTargetOffset, movementChangeRightHandHor, movementChangeRightHandVer);
+
         // LEFT HAND MOVEMENT
-        Vector3 movement_z_left_hand = this.transform.InverseTransformDirection(rightHandTarget.forward) * horizontalCurve.Evaluate(adjustedTime-1f);
+        float movementChangeLeftHandHor = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.3f;
+        float movementChangeLeftHandVer = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
+        SetTargetPosition(leftHandTarget,  leftHandTargetOffset, movementChangeLeftHandHor, movementChangeLeftHandVer);
 
-        // UPDATE HANDS LOCAL POSITION
-        rightHandTarget.localPosition = rightHandTargetOffset + movement_z_right_hand;
-        leftHandTarget.localPosition = leftTargetOffset + movement_z_left_hand;
-
-        //UPDATE FEET LOCAL POSITION
-        leftFootTarget.localPosition = leftTargetOffset + movement_z_left_foot + movement_y_left_foot;
-        rightFootTarget.localPosition = rightTargetOffset + movement_z_right_foot + movement_y_right_foot;
-
-        float LeftLegDirection = movementChangeLeftFoot - leftFootLastForwardMovement;
-        float RightLegDirection = movementChangeRightFoot - rightFootLastForwardMovement;
+        float LeftLegDirection = movementChangeLeftFootHor - leftFootLastForwardMovement;
+        float RightLegDirection = movementChangeRightFootVer - rightFootLastForwardMovement;
 
         // Only when character's feet move backwards we set the foot to stick to the ground
         RaycastHit hit;
         if (LeftLegDirection < 0 && Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, Mathf.Infinity )){
             leftFootTarget.position = hit.point;
+            Debug.Log("this.transform.forward: " + this.transform.forward);
+            Debug.Log("LeftLegDirection: " + LeftLegDirection );
+            this.transform.position += this.transform.forward * Math.Abs(LeftLegDirection);
         }
 
         if (RightLegDirection<0 && Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit, Mathf.Infinity)){
             rightFootTarget.position = hit.point;
+            this.transform.position += this.transform.forward * Math.Abs(RightLegDirection);
+
         }
-        leftFootLastForwardMovement = movementChangeLeftFoot;
-        rightFootLastForwardMovement = movementChangeRightFoot;
+        leftFootLastForwardMovement = movementChangeLeftFootHor;
+        rightFootLastForwardMovement = movementChangeRightFootVer;
 
     }
 
