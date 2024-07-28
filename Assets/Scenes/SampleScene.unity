@@ -512,10 +512,10 @@ MonoBehaviour:
     m_Target: {fileID: 309867813}
     m_Hint: {fileID: 0}
     m_TargetPositionWeight: 1
-    m_TargetRotationWeight: 1
+    m_TargetRotationWeight: 0
     m_HintWeight: 1
     m_MaintainTargetPositionOffset: 0
-    m_MaintainTargetRotationOffset: 0
+    m_MaintainTargetRotationOffset: 1
 --- !u!1 &480419893 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100006, guid: 510e8b094d51c0c448a1f47f52b71413, type: 3}
@@ -540,7 +540,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.61326617, y: 0.652297, z: 0.30681762}
+  m_Size: {x: 0.7, y: 0.652297, z: 0.30681762}
   m_Center: {x: -0.0000000745058, y: 0.00000008940697, z: 0.1361527}
 --- !u!1 &485197024 stripped
 GameObject:
@@ -727,10 +727,10 @@ MonoBehaviour:
     m_Target: {fileID: 1711978581}
     m_Hint: {fileID: 0}
     m_TargetPositionWeight: 1
-    m_TargetRotationWeight: 1
+    m_TargetRotationWeight: 0
     m_HintWeight: 1
     m_MaintainTargetPositionOffset: 0
-    m_MaintainTargetRotationOffset: 0
+    m_MaintainTargetRotationOffset: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1106,7 +1106,8 @@ MonoBehaviour:
     m_PreInfinity: 0
     m_PostInfinity: 0
     m_RotationOrder: 4
-  frequency: 1.5
+  frequency: 2
+  turnDuration: 4
 --- !u!65 &764120407
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2087,7 +2088,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1165834514}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2139,7 +2140,7 @@ Transform:
   m_GameObject: {fileID: 1165834514}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.294, y: 0.654, z: 0.413}
+  m_LocalPosition: {x: 0.294, y: 0.506, z: 0.238}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2258,9 +2259,6 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 510e8b094d51c0c448a1f47f52b71413, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2063538266}
     - targetCorrespondingSourceObject: {fileID: 100002, guid: 510e8b094d51c0c448a1f47f52b71413, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1390397565}
@@ -2372,7 +2370,7 @@ Transform:
   m_GameObject: {fileID: 1500533013}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.308, y: 0.642, z: 0.449}
+  m_LocalPosition: {x: -0.268, y: 0.539, z: 0.103}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2395,7 +2393,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -2406,7 +2404,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1500533013}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2772,38 +2770,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8169382868667117632, guid: 452647ac64faa4310b3f5e6284575847, type: 3}
   m_PrefabInstance: {fileID: 965363097}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2063538263 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100000, guid: 510e8b094d51c0c448a1f47f52b71413, type: 3}
-  m_PrefabInstance: {fileID: 1373171818}
-  m_PrefabAsset: {fileID: 0}
---- !u!54 &2063538266
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2063538263}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!4 &2065964739 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6000407479487422213, guid: 452647ac64faa4310b3f5e6284575847, type: 3}
