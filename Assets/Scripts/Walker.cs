@@ -59,7 +59,7 @@ public class Walker : MonoBehaviour
 
     (float, float) moveLeftFootTarget(float adjustedTime, float right){
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.25f;
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward, right);
         float forwardDirection = forward - leftFootLastForwardMovement;
         float rightDirection = right - leftFootLastRightMovement;
@@ -70,7 +70,7 @@ public class Walker : MonoBehaviour
 
     (float, float) moveRightFootTarget(float adjustedTime, float right){
         float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.25f;
         SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward, right);
         float forwardDirection = forward - rightFootLastForwardMovement;
         float rightDirection = right - rightFootLastRightMovement;
@@ -82,14 +82,14 @@ public class Walker : MonoBehaviour
     }
 
     void moveLeftHandTarget(float adjustedTime){
-        float forward = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.3f;
+        float forward = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.4f;
         float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
         float right = 0.0f;
         SetTargetPosition(leftHandTarget,  leftHandTargetOffset, forward, upward, right);
     }
 
     void moveRightHandTarget(float adjustedTime){
-        float forward = armHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+        float forward = armHorizontalCurve.Evaluate(adjustedTime) * 0.4f;
         float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
         float right = 0.0f;
         SetTargetPosition(rightHandTarget,  rightHandTargetOffset, forward, upward, right);
@@ -102,43 +102,51 @@ public class Walker : MonoBehaviour
         float right = 0.0f;
         Debug.Log("turnFlag"+ this.turnFlag);
 
+        // Walking movement
         (float  leftLegDirectionforward, float leftLegDirectionright)  = moveLeftFootTarget(adjustedTime, right);
         (float rightLegDirectionforward, float rightLegDirectionright) = moveRightFootTarget(adjustedTime, right);
         moveLeftHandTarget(adjustedTime);
         moveRightHandTarget(adjustedTime);
 
 
-        // Only when character's feet move backwards we set the foot to stick to the ground
+        // When the character is close to an obstacle he needs to turn
+        // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
+        // The first degree that is feasible is picked
+        // if turned 45 degrees check at second 5 10 , 15 if we can turn + 45 again
+
+        // move game object forward when the foot hits the floor
         RaycastHit hit;
-        if ( Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, Mathf.Infinity )){
+        bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
+        if ( raycastHittingFloor  && leftLegDirectionforward<0){
             leftFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Max(leftLegDirectionforward, 0f);
+            this.transform.position += this.transform.forward * Math.Max(-leftLegDirectionforward, 0F);
             // this.transform.position += this.transform.right * leftLegDirectionright;
-             if (turnFlag == 1 && elapsedTime<=turnDuration) {
-                this.transform.position += this.transform.right * leftLegDirectionforward;
+            //  if (turnFlag == 1 && elapsedTime<=turnDuration) {
+            //     this.transform.position += this.transform.right * leftLegDirectionforward;
                 
-             }
+            //  }
 
         }
-
-        if (  Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit, Mathf.Infinity)){
+        
+        raycastHittingFloor = Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit,  10f);
+        if ( raycastHittingFloor && rightLegDirectionforward<0){
             rightFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Max(rightLegDirectionforward, 0f);
+            this.transform.position += this.transform.forward * Math.Max(-rightLegDirectionforward, 0f);
             
-             if (turnFlag == 1 && elapsedTime<=turnDuration) {
-                this.transform.position += this.transform.right * rightLegDirectionforward;
-             }
+            //  if (turnFlag == 1 && elapsedTime<=turnDuration) {
+            //     this.transform.position += this.transform.right * rightLegDirectionforward;
+            //  }
 
             // this.transform.position += this.transform.right * rightLegDirectionright;
 
         }
-        if (turnFlag==1){
-            StartCoroutine(RotateOverTime(Quaternion.Euler(0, 90, 0), turnDuration));
-        }
-        elapsedTime += Time.deltaTime;
-        if (elapsedTime >turnDuration){
-            turnFlag=0;
-        }
+        // if (turnFlag==1){
+        //     StartCoroutine(RotateOverTime(Quaternion.Euler(0, 90, 0), turnDuration));
+        // }
+        // elapsedTime += Time.deltaTime;
+        // if (elapsedTime >turnDuration){
+        //     turnFlag=0;
+        // }
 
     }
 
