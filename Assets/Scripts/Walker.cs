@@ -59,7 +59,7 @@ public class Walker : MonoBehaviour
 
     (float, float) moveLeftFootTarget(float adjustedTime, float right){
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.25f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.3f;
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward, right);
         float forwardDirection = forward - leftFootLastForwardMovement;
         float rightDirection = right - leftFootLastRightMovement;
@@ -70,7 +70,7 @@ public class Walker : MonoBehaviour
 
     (float, float) moveRightFootTarget(float adjustedTime, float right){
         float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.25f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.3f;
         SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward, right);
         float forwardDirection = forward - rightFootLastForwardMovement;
         float rightDirection = right - rightFootLastRightMovement;
