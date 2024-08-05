@@ -36,3 +36,4 @@
 *.prefab
 [Pp]rojectSettings/ProjectVersion.txt
 [Pp]rojectSettings/UnityConnectSettings.asset
+*.DS_Store/
