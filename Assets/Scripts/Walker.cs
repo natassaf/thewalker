@@ -44,6 +44,8 @@ public class Walker : MonoBehaviour
     }
 
     void SetTargetPosition(Transform target, Vector3 offset, float forward, float upwards, float right){
+        // Performs the mathematical operations to change the target position using the  arguments given
+
         Vector3 moveForward = this.transform.InverseTransformVector(target.forward) * forward;
         Vector3 moveUp = this.transform.InverseTransformVector(target.up) * upwards;
         Vector3 moveRight = this.transform.InverseTransformVector(target.right) * right;
