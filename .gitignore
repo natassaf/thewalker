@@ -37,3 +37,4 @@
 [Pp]rojectSettings/ProjectVersion.txt
 [Pp]rojectSettings/UnityConnectSettings.asset
 *.DS_Store/
+Assets/.DS_Store

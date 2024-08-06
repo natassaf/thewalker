@@ -4,6 +4,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using System;
 
+public enum State{
+    Walking,
+    Turning,
+    Stop
+}
+
+
 public class Walker : MonoBehaviour
 {   
     public Transform leftFootTarget;
@@ -26,15 +33,12 @@ public class Walker : MonoBehaviour
     
     private float leftFootLastForwardMovement = 0f;
     private float rightFootLastForwardMovement = 0f;
-    private float leftLegDirection=0f;
-    private float rightLegDirection=0f;
-    private float turnFlag = 0;
     public float turnDuration = 5.0f; // Duration of the rotation in seconds
-    private bool isRotating = true;
     private float elapsedTime=0.0f;
 
     private  Quaternion startRotation = new Quaternion(0f, 0f, 0f, 0f );
      private  Quaternion rotationChange = new Quaternion(0f, 0f, 0f, 0f );
+     private State activeState = State.Walking;
 
     void Start()
     {
@@ -88,61 +92,84 @@ public class Walker : MonoBehaviour
     void moveRightHandTarget(float adjustedTime){
         float forward = armHorizontalCurve.Evaluate(adjustedTime) * 0.4f;
         float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
-        float right = 0.0f;
         SetTargetPosition(rightHandTarget,  rightHandTargetOffset, forward, upward);
     }
-
-    void Update()
-    {   
-
-        float adjustedTime = Time.time * frequency;
-
-        if (Input.GetKeyDown(KeyCode.RightArrow) && turnFlag==0)
-        { 
-            turnFlag = 1;
-            elapsedTime = 0.0f;
-            rotationChange = Quaternion.AngleAxis(90f, this.transform.up);
-            startRotation = transform.rotation;
-        }
-        
-
-        Debug.Log("turnFlag"+ this.turnFlag);
+    
+    public void Walk(float adjustedTime){
         // Walking movement
         float  leftLegDirectionforward  = moveLeftFootTarget(adjustedTime );
         float rightLegDirectionforward = moveRightFootTarget(adjustedTime);
         moveLeftHandTarget(adjustedTime);
         moveRightHandTarget(adjustedTime);
-
-
-        // When the character is close to an obstacle he needs to turn
-        // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
-        // The first degree that is feasible is picked
-        // if turned 45 degrees check at second 5 10 , 15 if we can turn + 45 again
-
-        // move game object forward when the foot hits the floor
+        
+        // move game object forward when the foot hits the floor 
         RaycastHit hit;
         bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
-        if ( raycastHittingFloor  && leftLegDirectionforward<0){
+        if ( leftLegDirectionforward<0 && raycastHittingFloor ){
             leftFootTarget.position = hit.point;
             this.transform.position += this.transform.forward * Math.Max(-leftLegDirectionforward, 0F);
         }
         
         raycastHittingFloor = Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit,  10f);
-        if ( raycastHittingFloor && rightLegDirectionforward<0){
+        if ( rightLegDirectionforward<0 && raycastHittingFloor ){
             rightFootTarget.position = hit.point;
             this.transform.position += this.transform.forward * Math.Max(-rightLegDirectionforward, 0f);
     
 
         }
-        if (turnFlag==1){
-            StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
-            elapsedTime += Time.deltaTime;
-            if (elapsedTime>turnDuration){
-                // transform.rotation = startRotation * rotationChange;
-                turnFlag=0;
-                elapsedTime=0f;
-            }
+    }
+
+    void Turn(){
+        StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
+        elapsedTime += Time.deltaTime;
+        if (elapsedTime>turnDuration){
+            // transform.rotation = startRotation * rotationChange;
+            activeState = State.Walking;
+            elapsedTime=0f;
         }
+    }
+
+    void Stop(){
+        
+    }
+
+    void Update()
+    {   
+
+
+        if (Input.GetKeyDown(KeyCode.RightArrow) && !(activeState==State.Turning))
+        { 
+            activeState = State.Turning;
+            elapsedTime = 0.0f;
+            startRotation = transform.rotation;
+            // rotationChange = Quaternion.AngleAxis(90f, this.transform.up);
+            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
+
+        }
+        
+        Debug.Log("active state"+ activeState);
+        float adjustedTime = Time.time * frequency;
+
+        if (activeState == State.Walking){
+            Walk(adjustedTime);
+        }
+        else if ( activeState == State.Turning){
+            Walk(adjustedTime);
+            Turn();
+
+        }
+        else{
+            Stop();
+        }
+
+        
+        
+        // When the character is close to an obstacle he needs to turn
+        // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
+        // The first degree that is feasible is picked
+        // if turned 45 degrees check at second 5 10 , 15 if we can turn + 45 again
+
+
     }
 
     private IEnumerator RotateOverTime(Quaternion rotationChange, float duration, float elapsedTime)
