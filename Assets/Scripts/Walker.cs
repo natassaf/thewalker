@@ -24,7 +24,7 @@ public class Walker : MonoBehaviour
     public AnimationCurve armHorizontalCurve;
 
     public AnimationCurve armVerticalCurve;
-    public float frequency = 1.5f; 
+    public float frequency = 1.2f; 
 
     private Vector3 leftFootTargetOffset;
     private Vector3 rightFootTargetOffset;
@@ -33,7 +33,7 @@ public class Walker : MonoBehaviour
     
     private float leftFootLastForwardMovement = 0f;
     private float rightFootLastForwardMovement = 0f;
-    public float turnDuration = 5.0f; // Duration of the rotation in seconds
+    public float turnDuration = 2.0f; // Duration of the rotation in seconds
     private float elapsedTime=0.0f;
 
     private  Quaternion startRotation = new Quaternion(0f, 0f, 0f, 0f );
@@ -135,32 +135,34 @@ public class Walker : MonoBehaviour
     }
 
     void Stop(){
-        RaycastHit hit;
-        bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
-        if ( raycastHittingFloor ){
-            leftFootTarget.position = hit.point;
-        }
-        
+        animator  = GetComponent<Animator>();
+        activeState = State.Stop;
+        animator.SetBool("IsIdle", true);
     }
 
     void Update()
     {   
 
 
+        if (Input.GetKeyDown(KeyCode.LeftArrow) && !(activeState==State.Turning))
+        { 
+            activeState = State.Turning;
+            elapsedTime = 0.0f;
+            startRotation = transform.rotation;
+            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
+        }
         if (Input.GetKeyDown(KeyCode.RightArrow) && !(activeState==State.Turning))
         { 
             activeState = State.Turning;
             elapsedTime = 0.0f;
             startRotation = transform.rotation;
-            // rotationChange = Quaternion.AngleAxis(90f, this.transform.up);
-            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
-
+            rotationChange = Quaternion.AngleAxis(45f, this.transform.up);
         }
-        if (Input.GetKeyDown(KeyCode.A)){
+        if (Input.GetKeyDown(KeyCode.Backspace)){
             activeState = State.Stop;
             animator.SetBool("IsIdle", true);
         }
-        if (Input.GetKeyDown(KeyCode.LeftArrow)){
+        if (Input.GetKeyDown(KeyCode.UpArrow)){
             animator.SetBool("IsIdle", false);
             activeState = State.Walking;
         }

@@ -956,8 +956,8 @@ MonoBehaviour:
     m_PreInfinity: 0
     m_PostInfinity: 0
     m_RotationOrder: 4
-  frequency: 1
-  turnDuration: 4
+  frequency: 1.2
+  turnDuration: 2
 --- !u!65 &764120407
 BoxCollider:
   m_ObjectHideFlags: 0
