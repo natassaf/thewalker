@@ -85,7 +85,6 @@ public class Walker : MonoBehaviour
         float forwardDirection = forward - rightFootLastForwardMovement;
         rightFootLastForwardMovement = forward;
         return forwardDirection;
-
     }
 
     void moveLeftHandTarget(float adjustedTime){
@@ -102,33 +101,39 @@ public class Walker : MonoBehaviour
     
     public void Walk(float adjustedTime){
         // Walking movement
-        float  leftLegDirectionforward  = moveLeftFootTarget(adjustedTime );
+        // move the target that the left foot tip is following
+        float  leftLegDirectionforward  = moveLeftFootTarget(adjustedTime ); 
+         // move the target that the right foot tip is following
         float rightLegDirectionforward = moveRightFootTarget(adjustedTime);
-        moveLeftHandTarget(adjustedTime);
-        moveRightHandTarget(adjustedTime);
+        // move the target that the left hand is following
+        moveLeftHandTarget(adjustedTime); 
+        // move the target that the right hand is following
+        moveRightHandTarget(adjustedTime); 
         
         // move game object forward when the foot hits the floor 
         RaycastHit hit;
+        // find the position where a vertical line starting from the target hits the floor
         bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
-        if ( leftLegDirectionforward<0 && raycastHittingFloor ){
+        // if the leg moves backwards set the target to be on the floor for aesthetical reasons
+        // Also when the leg moves backward move the character
+        if ( leftLegDirectionforward<0 && raycastHittingFloor ){ 
             leftFootTarget.position = hit.point;
             this.transform.position += this.transform.forward * Math.Max(-leftLegDirectionforward, 0F);
         }
         
+        // Same logic as in the code snippet above but for the right leg
         raycastHittingFloor = Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit,  10f);
         if ( rightLegDirectionforward<0 && raycastHittingFloor ){
             rightFootTarget.position = hit.point;
             this.transform.position += this.transform.forward * Math.Max(-rightLegDirectionforward, 0f);
-    
-
         }
     }
 
     void Turn(){
+        // Coroutines are able to distribute  the execution into many frames
         StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
         elapsedTime += Time.deltaTime;
         if (elapsedTime>turnDuration){
-            // transform.rotation = startRotation * rotationChange;
             activeState = State.Walking;
             elapsedTime=0f;
         }
@@ -142,21 +147,21 @@ public class Walker : MonoBehaviour
 
     void Update()
     {   
-
-
         if (Input.GetKeyDown(KeyCode.LeftArrow) && !(activeState==State.Turning))
         { 
             activeState = State.Turning;
-            elapsedTime = 0.0f;
-            startRotation = transform.rotation;
-            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
+            // ElapsedTime holds the time passed from the start of the turn. When reaching turnDuration we stop turning
+            elapsedTime = 0.0f; 
+            startRotation = transform.rotation; // Important step: set the current rotation as starting
+            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up); // Set rotation change 45 degrees left
         }
         if (Input.GetKeyDown(KeyCode.RightArrow) && !(activeState==State.Turning))
         { 
             activeState = State.Turning;
+            // ElapsedTime holds the time passed from the start of the turn. When reaching turnDuration we stop turning
             elapsedTime = 0.0f;
-            startRotation = transform.rotation;
-            rotationChange = Quaternion.AngleAxis(45f, this.transform.up);
+            startRotation = transform.rotation; // Important step: set the current rotation as starting
+            rotationChange = Quaternion.AngleAxis(45f, this.transform.up); // Set rotation change 45 degrees right
         }
         if (Input.GetKeyDown(KeyCode.Space)){
             activeState = State.Stop;
@@ -167,22 +172,20 @@ public class Walker : MonoBehaviour
             activeState = State.Walking;
         }
         Debug.Log("active state"+ activeState);
-        float adjustedTime = Time.time * frequency;
 
+        // frequency sets the time of a period. Affects the speed of movements.
+        float adjustedTime = Time.time * frequency; 
         if (activeState == State.Walking){
             Walk(adjustedTime);
         }
         else if ( activeState == State.Turning){
-            Walk(adjustedTime);
+            Walk(adjustedTime); 
             Turn();
-
         }
         else{
             Stop();
         }
 
-        
-        
         // When the character is close to an obstacle he needs to turn
         // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
         // The first degree that is feasible is picked
@@ -194,11 +197,10 @@ public class Walker : MonoBehaviour
     private IEnumerator RotateOverTime(Quaternion rotationChange, float duration, float elapsedTime)
     {
         while (elapsedTime < duration)
-        {
+        {   
+            // Slerp is a spherical linear interpolatio  used to smoothly interpolate between the starting rotation and the target rotation.
             transform.rotation = Quaternion.Slerp(startRotation, startRotation * rotationChange, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
-            Debug.Log("elapsedTimeLocal: "+ elapsedTime);
-
+            elapsedTime += Time.deltaTime; 
             yield return null; 
         }
     }
