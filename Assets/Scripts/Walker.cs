@@ -158,7 +158,7 @@ public class Walker : MonoBehaviour
             startRotation = transform.rotation;
             rotationChange = Quaternion.AngleAxis(45f, this.transform.up);
         }
-        if (Input.GetKeyDown(KeyCode.Backspace)){
+        if (Input.GetKeyDown(KeyCode.Space)){
             activeState = State.Stop;
             animator.SetBool("IsIdle", true);
         }
