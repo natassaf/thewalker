@@ -322,7 +322,7 @@ Transform:
   m_GameObject: {fileID: 309867809}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.097, y: -0.009, z: 0.229}
+  m_LocalPosition: {x: 0.097, y: -0.009, z: 0.046}
   m_LocalScale: {x: 0.116357274, y: 0.116357274, z: 0.116357274}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -833,9 +833,9 @@ Animator:
   m_GameObject: {fileID: 764120398}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 510e8b094d51c0c448a1f47f52b71413, type: 3}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 079f298808bc1445cba949a22612fa89, type: 2}
   m_CullingMode: 1
-  m_UpdateMode: 0
+  m_UpdateMode: 1
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
@@ -865,7 +865,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: -2
+      value: -1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -874,7 +874,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 0.2
+      value: 0.5
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -1002,7 +1002,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1258,7 +1258,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 452647ac64faa4310b3f5e6284575847, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.045
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 452647ac64faa4310b3f5e6284575847, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2368,7 +2368,7 @@ Transform:
   m_GameObject: {fileID: 1711978577}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.114, y: 0.005, z: 0.252}
+  m_LocalPosition: {x: -0.114, y: 0.005, z: 0.005}
   m_LocalScale: {x: 0.116357274, y: 0.116357274, z: 0.116357274}
   m_ConstrainProportionsScale: 0
   m_Children: []

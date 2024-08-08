@@ -39,9 +39,14 @@ public class Walker : MonoBehaviour
     private  Quaternion startRotation = new Quaternion(0f, 0f, 0f, 0f );
      private  Quaternion rotationChange = new Quaternion(0f, 0f, 0f, 0f );
      private State activeState = State.Walking;
-
+    Animator animator;
     void Start()
     {
+        
+        animator  = GetComponent<Animator>();
+        activeState = State.Stop;
+        animator.SetBool("IsIdle", true);
+        
         leftFootTargetOffset = leftFootTarget.localPosition;
         rightFootTargetOffset = rightFootTarget.localPosition;
 
@@ -66,7 +71,7 @@ public class Walker : MonoBehaviour
 
     float moveLeftFootTarget(float adjustedTime){
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.3f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward);
         float forwardDirection = forward - leftFootLastForwardMovement;
         leftFootLastForwardMovement = forward;
@@ -75,7 +80,7 @@ public class Walker : MonoBehaviour
 
     float moveRightFootTarget(float adjustedTime){
         float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.3f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
         SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward);
         float forwardDirection = forward - rightFootLastForwardMovement;
         rightFootLastForwardMovement = forward;
@@ -130,6 +135,11 @@ public class Walker : MonoBehaviour
     }
 
     void Stop(){
+        RaycastHit hit;
+        bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
+        if ( raycastHittingFloor ){
+            leftFootTarget.position = hit.point;
+        }
         
     }
 
@@ -146,7 +156,14 @@ public class Walker : MonoBehaviour
             rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
 
         }
-        
+        if (Input.GetKeyDown(KeyCode.A)){
+            activeState = State.Stop;
+            animator.SetBool("IsIdle", true);
+        }
+        if (Input.GetKeyDown(KeyCode.LeftArrow)){
+            animator.SetBool("IsIdle", false);
+            activeState = State.Walking;
+        }
         Debug.Log("active state"+ activeState);
         float adjustedTime = Time.time * frequency;
 
