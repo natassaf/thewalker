@@ -1,30 +1,28 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using System;
 
-public enum State{
+public enum State
+{
     Walking,
     Turning,
     Stop
 }
 
-
 public class Walker : MonoBehaviour
-{   
+{
     public Transform leftFootTarget;
     public Transform rightFootTarget;
-
     public Transform leftHandTarget;
     public Transform rightHandTarget;
 
     public AnimationCurve legHorizontalCurve;
     public AnimationCurve legVerticalCurve;
     public AnimationCurve armHorizontalCurve;
-
     public AnimationCurve armVerticalCurve;
-    public float frequency = 1.2f; 
+    
+    public float frequency = 1.2f;
+    public float turnDuration = 2.0f; // Duration of the rotation in seconds
 
     private Vector3 leftFootTargetOffset;
     private Vector3 rightFootTargetOffset;
@@ -33,179 +31,206 @@ public class Walker : MonoBehaviour
     
     private float leftFootLastForwardMovement = 0f;
     private float rightFootLastForwardMovement = 0f;
-    public float turnDuration = 2.0f; // Duration of the rotation in seconds
-    private float elapsedTime=0.0f;
+    private float elapsedTime = 0.0f;
 
-    private  Quaternion startRotation = new Quaternion(0f, 0f, 0f, 0f );
-     private  Quaternion rotationChange = new Quaternion(0f, 0f, 0f, 0f );
-     private State activeState = State.Walking;
-    Animator animator;
+    private Quaternion startRotation = Quaternion.identity;
+    private Quaternion rotationChange = Quaternion.identity;
+    private State activeState = State.Walking;
+    private Animator animator;
+
+    // Reference to the terrain object
+    private Terrain terrain;
+    private float terrainHeightOffset = 0.0f; // Height offset to keep character above terrain
+
     void Start()
     {
-        
-        animator  = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         activeState = State.Stop;
         animator.SetBool("IsIdle", true);
-        
+
         leftFootTargetOffset = leftFootTarget.localPosition;
         rightFootTargetOffset = rightFootTarget.localPosition;
 
         leftHandTargetOffset = leftHandTarget.localPosition;
         rightHandTargetOffset = rightHandTarget.localPosition;
+
+        // Get the terrain reference
+        terrain = Terrain.activeTerrain;
+        if (terrain == null)
+        {
+            Debug.LogError("No active terrain found!");
+        }
     }
 
-    void SetTargetPosition(Transform target, Vector3 offset, float forward, float upwards){
-        // Performs the mathematical operations to change the target position using the  arguments given
-
+    void SetTargetPosition(Transform target, Vector3 offset, float forward, float upwards)
+    {
         Vector3 moveForward = this.transform.InverseTransformVector(target.forward) * forward;
         Vector3 moveUp = this.transform.InverseTransformVector(target.up) * upwards;
 
         target.localPosition = offset + moveForward + moveUp;
     }
 
-    // private void OnCollisionEnter(Collision collided){
-    //     Debug.Log("Collided with " + collided);
-    //     this.turnFlag = 1.0f;
-    //     elapsedTime = 0.0f;
-    // }
-
-    float moveLeftFootTarget(float adjustedTime){
+    float MoveLeftFootTarget(float adjustedTime)
+    {
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
-        SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward);
+        float upward = legVerticalCurve.Evaluate(adjustedTime + 0.5f) * 0.2f;
+        SetTargetPosition(leftFootTarget, leftFootTargetOffset, forward, upward);
         float forwardDirection = forward - leftFootLastForwardMovement;
         leftFootLastForwardMovement = forward;
         return forwardDirection;
     }
 
-    float moveRightFootTarget(float adjustedTime){
-        float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
-        SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward);
+    float MoveRightFootTarget(float adjustedTime)
+    {
+        float forward = legHorizontalCurve.Evaluate(adjustedTime - 1) * 0.3f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime - 0.5f) * 0.2f;
+        SetTargetPosition(rightFootTarget, rightFootTargetOffset, forward, upward);
         float forwardDirection = forward - rightFootLastForwardMovement;
         rightFootLastForwardMovement = forward;
         return forwardDirection;
     }
 
-    void moveLeftHandTarget(float adjustedTime){
-        float forward = armHorizontalCurve.Evaluate(adjustedTime-1f) * 0.4f;
+    void MoveLeftHandTarget(float adjustedTime)
+    {
+        float forward = armHorizontalCurve.Evaluate(adjustedTime - 1f) * 0.4f;
         float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
-        SetTargetPosition(leftHandTarget,  leftHandTargetOffset, forward, upward);
+        SetTargetPosition(leftHandTarget, leftHandTargetOffset, forward, upward);
     }
 
-    void moveRightHandTarget(float adjustedTime){
+    void MoveRightHandTarget(float adjustedTime)
+    {
         float forward = armHorizontalCurve.Evaluate(adjustedTime) * 0.4f;
         float upward = armVerticalCurve.Evaluate(adjustedTime) * 0.01f;
-        SetTargetPosition(rightHandTarget,  rightHandTargetOffset, forward, upward);
-    }
-    
-    public void Walk(float adjustedTime){
-        // Walking movement
-        // move the target that the left foot tip is following
-        float  leftLegDirectionforward  = moveLeftFootTarget(adjustedTime ); 
-         // move the target that the right foot tip is following
-        float rightLegDirectionforward = moveRightFootTarget(adjustedTime);
-        // move the target that the left hand is following
-        moveLeftHandTarget(adjustedTime); 
-        // move the target that the right hand is following
-        moveRightHandTarget(adjustedTime); 
-        
-        // move game object forward when the foot hits the floor 
-        RaycastHit hit;
-        // find the position where a vertical line starting from the target hits the floor
-        bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f );
-        // if the leg moves backwards set the target to be on the floor for aesthetical reasons
-        // Also when the leg moves backward move the character
-        if ( leftLegDirectionforward<0 && raycastHittingFloor ){ 
-            leftFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Max(-leftLegDirectionforward, 0F);
-        }
-        
-        // Same logic as in the code snippet above but for the right leg
-        raycastHittingFloor = Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit,  10f);
-        if ( rightLegDirectionforward<0 && raycastHittingFloor ){
-            rightFootTarget.position = hit.point;
-            this.transform.position += this.transform.forward * Math.Max(-rightLegDirectionforward, 0f);
-        }
+        SetTargetPosition(rightHandTarget, rightHandTargetOffset, forward, upward);
     }
 
-    void Turn(){
-        // Coroutines are able to distribute  the execution into many frames
+    public void Walk(float adjustedTime)
+    {
+        float leftLegDirectionForward = MoveLeftFootTarget(adjustedTime);
+        float rightLegDirectionForward = MoveRightFootTarget(adjustedTime);
+        MoveLeftHandTarget(adjustedTime);
+        MoveRightHandTarget(adjustedTime);
+
+        RaycastHit hit;
+        bool raycastHittingFloor = Physics.Raycast(leftFootTarget.position + leftFootTarget.up, -leftFootTarget.up, out hit, 10f);
+
+        if (leftLegDirectionForward < 0 && raycastHittingFloor)
+        {
+            leftFootTarget.position = hit.point;
+            this.transform.position += this.transform.forward * Mathf.Max(-leftLegDirectionForward, 0F);
+        }
+
+        raycastHittingFloor = Physics.Raycast(rightFootTarget.position + rightFootTarget.up, -rightFootTarget.up, out hit, 10f);
+        if (rightLegDirectionForward < 0 && raycastHittingFloor)
+        {
+            rightFootTarget.position = hit.point;
+            this.transform.position += this.transform.forward * Mathf.Max(-rightLegDirectionForward, 0f);
+        }
+
+        // Align with terrain normal
+        AlignWithTerrainNormal();
+    }
+
+    private void AlignWithTerrainNormal()
+    {
+        if (terrain == null)
+        {
+            Debug.LogError("No active terrain found!");
+            return;
+        }
+
+        Vector3 position = transform.position;
+        float terrainHeight = terrain.SampleHeight(position) + terrain.transform.position.y;
+        position.y = terrainHeight + terrainHeightOffset;
+        transform.position = position;
+
+        // Get terrain normal
+        Vector3 terrainNormal = GetTerrainNormal(position);
+        Quaternion targetRotation = Quaternion.FromToRotation(transform.up, terrainNormal) * transform.rotation;
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+    }
+
+    private Vector3 GetTerrainNormal(Vector3 position)
+    {
+        if (terrain.terrainData == null)
+        {
+            Debug.LogError("No terrain data found!");
+            return Vector3.up;
+        }
+
+        float x = (position.x - terrain.transform.position.x) / terrain.terrainData.size.x;
+        float z = (position.z - terrain.transform.position.z) / terrain.terrainData.size.z;
+        return terrain.terrainData.GetInterpolatedNormal(x, z);
+    }
+
+    void Turn()
+    {
         StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
         elapsedTime += Time.deltaTime;
-        if (elapsedTime>turnDuration){
+        if (elapsedTime > turnDuration)
+        {
             activeState = State.Walking;
-            elapsedTime=0f;
+            elapsedTime = 0f;
         }
     }
 
-    void Stop(){
-        animator  = GetComponent<Animator>();
+    void Stop()
+    {
         activeState = State.Stop;
         animator.SetBool("IsIdle", true);
     }
 
     void Update()
-    {   
-        if (Input.GetKeyDown(KeyCode.LeftArrow) && !(activeState==State.Turning))
-        { 
+    {
+        if (Input.GetKeyDown(KeyCode.LeftArrow) && activeState != State.Turning)
+        {
             activeState = State.Turning;
-            // ElapsedTime holds the time passed from the start of the turn. When reaching turnDuration we stop turning
-            elapsedTime = 0.0f; 
-            startRotation = transform.rotation; // Important step: set the current rotation as starting
-            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up); // Set rotation change 45 degrees left
-        }
-        if (Input.GetKeyDown(KeyCode.RightArrow) && !(activeState==State.Turning))
-        { 
-            activeState = State.Turning;
-            // ElapsedTime holds the time passed from the start of the turn. When reaching turnDuration we stop turning
             elapsedTime = 0.0f;
-            startRotation = transform.rotation; // Important step: set the current rotation as starting
-            rotationChange = Quaternion.AngleAxis(45f, this.transform.up); // Set rotation change 45 degrees right
+            startRotation = transform.rotation;
+            rotationChange = Quaternion.AngleAxis(-45f, this.transform.up);
         }
-        if (Input.GetKeyDown(KeyCode.Space)){
+        if (Input.GetKeyDown(KeyCode.RightArrow) && activeState != State.Turning)
+        {
+            activeState = State.Turning;
+            elapsedTime = 0.0f;
+            startRotation = transform.rotation;
+            rotationChange = Quaternion.AngleAxis(45f, this.transform.up);
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
             activeState = State.Stop;
             animator.SetBool("IsIdle", true);
         }
-        if (Input.GetKeyDown(KeyCode.UpArrow)){
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
             animator.SetBool("IsIdle", false);
             activeState = State.Walking;
         }
-        Debug.Log("active state"+ activeState);
+        Debug.Log("active state: " + activeState);
 
-        // frequency sets the time of a period. Affects the speed of movements.
-        float adjustedTime = Time.time * frequency; 
-        if (activeState == State.Walking){
+        float adjustedTime = Time.time * frequency;
+        if (activeState == State.Walking)
+        {
             Walk(adjustedTime);
         }
-        else if ( activeState == State.Turning){
-            Walk(adjustedTime); 
+        else if (activeState == State.Turning)
+        {
+            Walk(adjustedTime);
             Turn();
         }
-        else{
+        else
+        {
             Stop();
         }
-
-        // When the character is close to an obstacle he needs to turn
-        // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
-        // The first degree that is feasible is picked
-        // if turned 45 degrees check at second 5 10 , 15 if we can turn + 45 again
-
-
     }
 
     private IEnumerator RotateOverTime(Quaternion rotationChange, float duration, float elapsedTime)
     {
         while (elapsedTime < duration)
-        {   
-            // Slerp is a spherical linear interpolatio  used to smoothly interpolate between the starting rotation and the target rotation.
+        {
             transform.rotation = Quaternion.Slerp(startRotation, startRotation * rotationChange, elapsedTime / duration);
-            elapsedTime += Time.deltaTime; 
-            yield return null; 
+            elapsedTime += Time.deltaTime;
+            yield return null;
         }
     }
 }
-
-
-
-
