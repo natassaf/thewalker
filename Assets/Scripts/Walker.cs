@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using System;
+using UnityEngine.AI;
 
 public enum State{
     Walking,
@@ -172,6 +173,28 @@ public class Walker : MonoBehaviour
             activeState = State.Walking;
         }
         Debug.Log("active state"+ activeState);
+        List<int> degrees =  new List<int> {-90, -60, -45, 0, 45, 60, 90};
+        RaycastHit hitPoint;
+        bool hitFlag0;
+        Debug.Log("this.transform.position:" + this.transform.position);
+        Vector3 currentPosition = transform.position;
+
+        // Increment the Y position by 1 meter
+        currentPosition.y += 1.0f;
+
+        foreach (int deg in degrees){
+            Quaternion rotation  = Quaternion.Euler(0, deg, 0);
+            Vector3 direction = rotation * Vector3.forward;
+            
+            hitFlag0 = Physics.Raycast(currentPosition, direction, out hitPoint,  Mathf.Infinity);
+            if (hitPoint.collider.tag == "Obstacle"){
+                Debug.Log("deg: "+ deg + "tag: " + hitPoint.collider.tag);
+
+            }
+            Debug.DrawRay(currentPosition, direction * 100, Color.blue, 1.0f);
+
+        }
+       
 
         // frequency sets the time of a period. Affects the speed of movements.
         float adjustedTime = Time.time * frequency; 
@@ -185,11 +208,6 @@ public class Walker : MonoBehaviour
         else{
             Stop();
         }
-
-        // When the character is close to an obstacle he needs to turn
-        // Check distance from closest obstacle on degrees -45, +45, -90, 90 , -180, +180
-        // The first degree that is feasible is picked
-        // if turned 45 degrees check at second 5 10 , 15 if we can turn + 45 again
 
 
     }
