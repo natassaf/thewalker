@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using System;
-using UnityEngine.AI;
 
 public enum State{
     Walking,
@@ -44,11 +42,8 @@ public class Walker : MonoBehaviour
     Animator animator;
     void Start()
     {
-        int? turningDeg=null;
-
         animator  = GetComponent<Animator>();
-        activeState = State.Stop;
-        animator.SetBool("IsIdle", true);
+        // animator.SetBool("IsIdle", true);
         unobstractedDeg = new List<int>();
         rotationChange = new Quaternion(0f, 0f, 0f, 0f );
         
@@ -57,6 +52,7 @@ public class Walker : MonoBehaviour
 
         leftHandTargetOffset = leftHandTarget.localPosition;
         rightHandTargetOffset = rightHandTarget.localPosition;
+        activeState = State.Walking;
     }
 
     void SetTargetPosition(Transform target, Vector3 offset, float forward, float upwards){
@@ -132,8 +128,9 @@ public class Walker : MonoBehaviour
 
     void Turn(int? deg, Quaternion rotationChange){
         // Coroutines are able to distribute  the execution into many frames
-        float turnDuration = 2f;// (float)Math.Max((float) deg/20.0, 1.0);
+        float turnDuration = Math.Max(Math.Abs((float)Math.Max((float) deg/20.0, 1.0)), 3f);
         Debug.Log("deg: "+ deg);
+        Debug.Log("turnDuration" + turnDuration);
 
         StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
         elapsedTime += Time.deltaTime;
@@ -152,9 +149,16 @@ public class Walker : MonoBehaviour
         animator.SetBool("IsIdle", true);
     }
 
-    public List<int> findFeasibleDegrees(Vector3 rayPosition, List<int> unobstractedDeg){
+    public List<int> findFeasibleDegrees(Vector3 rayPosition, List<int> unobstractedDeg, bool extendedSearch){
         RaycastHit hitPoint;
-        List<int> degrees =  new List<int> {-90, -60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60, 90};  
+        List<int> degrees;
+        if (extendedSearch){
+            degrees =  new List<int> {-130, -120,- 100, 100, 120, 130};  
+        }
+        else{
+            degrees =  new List<int> {-90, -60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60, 90};  
+
+        }
         bool hitFlag;
 
         // Increment the Y position by 1 meter
@@ -171,7 +175,6 @@ public class Walker : MonoBehaviour
     }
     void Update()
     {   
-
         if (Input.GetKeyDown(KeyCode.LeftArrow) && !(activeState==State.Turning))
         { 
             turningDeg = -45;
@@ -206,11 +209,13 @@ public class Walker : MonoBehaviour
         rayPosition.y += 1.0f;
         Quaternion rotation0  = Quaternion.Euler(0, 0, 0);
         Vector3 direction0 = rotation0 * transform.forward;
-        hitFlag0 = Physics.Raycast(rayPosition, direction0, out hitPoint,  3.5f);
+        hitFlag0 = Physics.Raycast(rayPosition, direction0, out hitPoint,  4f);
         if (hitFlag0 && activeState != State.Turning){
-            Debug.Log("hitFlag0: "+ hitFlag0);
+            unobstractedDeg = findFeasibleDegrees(rayPosition, unobstractedDeg, false);
+            if (unobstractedDeg.Count == 0){
+                unobstractedDeg = findFeasibleDegrees(rayPosition, unobstractedDeg, true);
+            } 
 
-            unobstractedDeg = findFeasibleDegrees(rayPosition, unobstractedDeg);
             if (unobstractedDeg.Count > 0)
             {   
                 activeState = State.Turning;
@@ -224,9 +229,6 @@ public class Walker : MonoBehaviour
                 rotationChange = Quaternion.AngleAxis((float) turningDeg, this.transform.up); // Set rotation change 45 degrees left
             }
         }
-
-
-        Debug.Log("active state"+ activeState);
         
     
         // frequency sets the time of a period. Affects the speed of movements.
@@ -235,7 +237,6 @@ public class Walker : MonoBehaviour
             Walk(adjustedTime);
         }
         else if ( activeState == State.Turning){
-            Debug.Log("turningDeg:" + turningDeg);
             Walk(adjustedTime); 
             Turn(turningDeg, rotationChange);
         }
