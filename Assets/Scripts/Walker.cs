@@ -67,10 +67,18 @@ public class Walker : MonoBehaviour
 
 
     float moveLeftFootTarget(float adjustedTime){
+        // evaluate the transformation of the forward direction of target position in given time
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
+
+        // evaluate the transformation of the upward direction of target position in given time
         float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
+
+        // set the target position
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward);
+
+        //calculate the change of the position in the forward axis
         float forwardDirection = forward - leftFootLastForwardMovement;
+        
         leftFootLastForwardMovement = forward;
         return forwardDirection;
     }
@@ -128,9 +136,7 @@ public class Walker : MonoBehaviour
 
     void Turn(int? deg, Quaternion rotationChange){
         // Coroutines are able to distribute  the execution into many frames
-        float turnDuration = Math.Max(Math.Abs((float)Math.Max((float) deg/20.0, 1.0)), 3f);
-        Debug.Log("deg: "+ deg);
-        Debug.Log("turnDuration" + turnDuration);
+        float turnDuration = Math.Max(Math.Abs((float)Math.Max((float) deg/20.0, 1.0)), 2.5f);
 
         StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
         elapsedTime += Time.deltaTime;
@@ -149,13 +155,15 @@ public class Walker : MonoBehaviour
         animator.SetBool("IsIdle", true);
     }
 
-    public List<int> findFeasibleDegrees(Vector3 rayPosition, List<int> unobstractedDeg, bool extendedSearch){
+    public List<int> FindFeasibleDegrees(Vector3 rayPosition, List<int> unobstractedDeg, bool extendedSearch){
         RaycastHit hitPoint;
         List<int> degrees;
         if (extendedSearch){
+            // extended search candidate turns
             degrees =  new List<int> {-130, -120,- 100, 100, 120, 130};  
         }
         else{
+            // default candidate turns
             degrees =  new List<int> {-90, -60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60, 90};  
 
         }
@@ -163,18 +171,43 @@ public class Walker : MonoBehaviour
 
         // Increment the Y position by 1 meter
         foreach (int deg in degrees){
+
+            // Ray degrees affect the y axis
             Quaternion rotation  = Quaternion.Euler(0, deg, 0);
+
+            // apply the rotation in relation to the charachers forward direction
             Vector3 direction = rotation * transform.forward;
             
+            // check for obstacles in distance of 5 meters
             hitFlag = Physics.Raycast(rayPosition, direction, out hitPoint,  5f);
+
+            // if no obstacle is found add the degree under investigation to the candidate turns list
             if (!hitFlag && !unobstractedDeg.Contains(deg)){
                 unobstractedDeg.Add(deg);
             }
         }
         return unobstractedDeg;
     }
+    private bool CheckForObstacles(Vector3 rayPosition){
+        RaycastHit hitPoint;
+        bool hitFlag;
+
+        Quaternion rotation0  = Quaternion.Euler(0, 0, 0);
+        Vector3 direction0 = rotation0 * transform.forward;
+        hitFlag = Physics.Raycast(rayPosition, direction0, out hitPoint,  4f);
+        return hitFlag;
+    }
+
+    private int? PickTurningDegree(List<int> unobstractedDeg){
+        System.Random random = new System.Random();
+        int randomIndex = random.Next(0, unobstractedDeg.Count);
+        turningDeg = unobstractedDeg[randomIndex];
+        return turningDeg;
+    }
+
     void Update()
     {   
+        // Code used only for testing 
         if (Input.GetKeyDown(KeyCode.LeftArrow) && !(activeState==State.Turning))
         { 
             turningDeg = -45;
@@ -201,36 +234,39 @@ public class Walker : MonoBehaviour
             animator.SetBool("IsIdle", false);
             activeState = State.Walking;
         }
+        // End code used only for testing 
 
         // check if there is an obstacle in front of the character
-        RaycastHit hitPoint;
-        bool hitFlag0;
         Vector3 rayPosition = transform.position;
-        rayPosition.y += 1.0f;
-        Quaternion rotation0  = Quaternion.Euler(0, 0, 0);
-        Vector3 direction0 = rotation0 * transform.forward;
-        hitFlag0 = Physics.Raycast(rayPosition, direction0, out hitPoint,  4f);
+        rayPosition.y += 1.0f; // tackles a ray slope issue
+        // check if there is  an obstacle in front of the character
+        bool hitFlag0 = CheckForObstacles(rayPosition);
+
+        // if there is and no other turn is in progress 
         if (hitFlag0 && activeState != State.Turning){
-            unobstractedDeg = findFeasibleDegrees(rayPosition, unobstractedDeg, false);
+            
+            // find unobstructed turns in the range [-90, 90] that the character can take
+            unobstractedDeg = FindFeasibleDegrees(rayPosition, unobstractedDeg, false);
+
+            // if no feasible turn is found extend range and search again
             if (unobstractedDeg.Count == 0){
-                unobstractedDeg = findFeasibleDegrees(rayPosition, unobstractedDeg, true);
+                bool extendedSearch = true;
+                unobstractedDeg = FindFeasibleDegrees(rayPosition, unobstractedDeg, extendedSearch);
             } 
 
             if (unobstractedDeg.Count > 0)
             {   
-                activeState = State.Turning;
-                System.Random random = new System.Random();
-                // Generate a random index between 0 and the number of elements in the list
-                int randomIndex = random.Next(0, unobstractedDeg.Count);
+                // Pick one of the turns from the list
+                turningDeg = PickTurningDegree(unobstractedDeg);
 
+                // set the variables needed to turn
+                activeState = State.Turning;
                 elapsedTime = 0.0f;
                 startRotation = transform.rotation;
-                turningDeg = unobstractedDeg[randomIndex];
-                rotationChange = Quaternion.AngleAxis((float) turningDeg, this.transform.up); // Set rotation change 45 degrees left
+                rotationChange = Quaternion.AngleAxis((float) turningDeg, this.transform.up); 
             }
         }
         
-    
         // frequency sets the time of a period. Affects the speed of movements.
         float adjustedTime = Time.time * frequency; 
         if (activeState == State.Walking){
