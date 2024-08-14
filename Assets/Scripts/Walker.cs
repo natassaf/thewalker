@@ -39,11 +39,8 @@ public class Walker : MonoBehaviour
      private State activeState = State.Walking;
      private  List<int> unobstractedDeg;
      private int? turningDeg;
-    Animator animator;
     void Start()
     {
-        animator  = GetComponent<Animator>();
-        // animator.SetBool("IsIdle", true);
         unobstractedDeg = new List<int>();
         rotationChange = new Quaternion(0f, 0f, 0f, 0f );
         
@@ -71,7 +68,7 @@ public class Walker : MonoBehaviour
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
 
         // evaluate the transformation of the upward direction of target position in given time
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.2f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.4f;
 
         // set the target position
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward);
@@ -87,7 +84,12 @@ public class Walker : MonoBehaviour
         float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
         float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
         SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward);
+        //  The forwardDirection variable is how much the character position should change in the forward direction. 
+        // It's the current position amount of change - the change in the previous frame 
+        // In our character moving logic we will move the character only when this is negative. 
         float forwardDirection = forward - rightFootLastForwardMovement;
+        
+        // rightFootLastForwardMovement  is used to keep track of the last forward movement change.
         rightFootLastForwardMovement = forward;
         return forwardDirection;
     }
@@ -150,9 +152,7 @@ public class Walker : MonoBehaviour
     }
 
     void Stop(){
-        animator  = GetComponent<Animator>();
         activeState = State.Stop;
-        animator.SetBool("IsIdle", true);
     }
 
     public List<int> FindFeasibleDegrees(Vector3 rayPosition, List<int> unobstractedDeg, bool extendedSearch){
@@ -228,10 +228,8 @@ public class Walker : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Space)){
             activeState = State.Stop;
-            animator.SetBool("IsIdle", true);
         }
         if (Input.GetKeyDown(KeyCode.UpArrow)){
-            animator.SetBool("IsIdle", false);
             activeState = State.Walking;
         }
         // End code used only for testing 
