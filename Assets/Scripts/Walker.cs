@@ -68,7 +68,7 @@ public class Walker : MonoBehaviour
         float forward = legHorizontalCurve.Evaluate(adjustedTime) * 0.3f;
 
         // evaluate the transformation of the upward direction of target position in given time
-        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.4f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime+0.5f) * 0.3f;
 
         // set the target position
         SetTargetPosition(leftFootTarget,  leftFootTargetOffset, forward, upward);
@@ -82,7 +82,7 @@ public class Walker : MonoBehaviour
 
     float moveRightFootTarget(float adjustedTime){
         float forward = legHorizontalCurve.Evaluate(adjustedTime-1) * 0.3f;
-        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.2f;
+        float upward = legVerticalCurve.Evaluate(adjustedTime-0.5f) * 0.3f;
         SetTargetPosition(rightFootTarget,  rightFootTargetOffset, forward, upward);
         //  The forwardDirection variable is how much the character position should change in the forward direction. 
         // It's the current position amount of change - the change in the previous frame 
@@ -179,7 +179,7 @@ public class Walker : MonoBehaviour
             Vector3 direction = rotation * transform.forward;
             
             // check for obstacles in distance of 5 meters
-            hitFlag = Physics.Raycast(rayPosition, direction, out hitPoint,  5f);
+            hitFlag = Physics.Raycast(rayPosition, direction, out hitPoint,  3f);
 
             // if no obstacle is found add the degree under investigation to the candidate turns list
             if (!hitFlag && !unobstractedDeg.Contains(deg)){
