@@ -138,7 +138,7 @@ public class Walker : MonoBehaviour
 
     void Turn(int? deg, Quaternion rotationChange){
         // Coroutines are able to distribute  the execution into many frames
-        float turnDuration = Math.Max(Math.Abs((float)Math.Max((float) deg/20.0, 1.0)), 2.5f);
+        float turnDuration = Math.Max(Math.Abs((float)Math.Max((float) deg/20.0, 1.0)), 2.0f);
 
         StartCoroutine(RotateOverTime(rotationChange, turnDuration, elapsedTime));
         elapsedTime += Time.deltaTime;
@@ -172,8 +172,11 @@ public class Walker : MonoBehaviour
         // Increment the Y position by 1 meter
         foreach (int deg in degrees){
 
-            // Ray degrees affect the y axis
-            Quaternion rotation  = Quaternion.Euler(0, deg, 0);
+            // We use Quaternion.AngleAxis with the up direction as 
+            //rotation axis to get a ray that starts from the 
+            //character and pins in front of him with an deg angle
+            Quaternion rotation  = Quaternion.AngleAxis((float) deg, this.transform.up);
+
 
             // apply the rotation in relation to the charachers forward direction
             Vector3 direction = rotation * transform.forward;
@@ -192,9 +195,9 @@ public class Walker : MonoBehaviour
         RaycastHit hitPoint;
         bool hitFlag;
 
-        Quaternion rotation0  = Quaternion.Euler(0, 0, 0);
-        Vector3 direction0 = rotation0 * transform.forward;
-        hitFlag = Physics.Raycast(rayPosition, direction0, out hitPoint,  4f);
+
+        Vector3 direction0 = transform.forward;
+        hitFlag = Physics.Raycast(rayPosition, direction0, out hitPoint,  4.5f);
         return hitFlag;
     }
 
